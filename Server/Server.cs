@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using Core;
+using Helios.Channels;
+using Helios.Channels.Bootstrap;
+using Helios.Channels.Sockets;
 using Helios.Net;
 using Helios.Ops.Executors;
 using Helios.Reactor;
-using Helios.Reactor.Bootstrap;
 using Helios.Topology;
 
 namespace Server
@@ -21,6 +23,10 @@ namespace Server
         public int Port { get; }
 
         private Dictionary<Guid, IInternalClient> _clients;
+        private CancellationTokenSource _shutdownToken;
+
+        public MultithreadEventLoopGroup WorkerGroup { get; set; }
+        public MultithreadEventLoopGroup ServerGroup { get; set; }
 
         public Server(ILog logger, IPAddress ipAddress, int port)
         {
@@ -29,18 +35,30 @@ namespace Server
             Host = ipAddress;
 
             _clients = new Dictionary<Guid, IInternalClient>();
+
+            ServerGroup = new MultithreadEventLoopGroup(1);
+            WorkerGroup = new MultithreadEventLoopGroup(Environment.ProcessorCount / 2);
+
+            _shutdownToken = new CancellationTokenSource();
         }
 
         public void Start()
         {
             var executor = new TryCatchExecutor(exception => Console.WriteLine("Unhandled exception: {0}", exception));
 
-            var bootstrapper =
-                new ServerBootstrap()
-                    .WorkerThreads(2)
-                    .Executor(executor)
-                    .SetTransport(TransportType.Tcp)
-                    .Build();
+            var bootstrapper = new ServerBootstrap()
+                .Group(ServerGroup, WorkerGroup)
+                .Channel<TcpServerSocketChannel>()
+                .ChildOption(ChannelOption.TcpNodelay, true)
+                .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>(channel =>
+                {
+                    channel.Pipeline.AddLast(GetEncoder())
+                        .AddLast(GetDecoder())
+                        .AddLast(new IntCodec(true))
+                        .AddLast(new CounterHandlerInbound(_inboundThroughputCounter))
+                        .AddLast(new CounterHandlerOutbound(_outboundThroughputCounter))
+                        .AddLast(new ErrorCounterHandler(_errorCounter));
+                }));
 
             _server = bootstrapper.NewReactor(NodeBuilder.BuildNode().Host(Host).WithPort(Port));
             _server.OnConnection += OnTcpConnection;
@@ -71,6 +89,8 @@ namespace Server
 
         public void Stop()
         {
+            _shutdownToken.Cancel();
+
             _clients.Clear();
 
             Console.WriteLine("Shutting down...");
