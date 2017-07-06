@@ -1,76 +1,68 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using Helios.Exceptions;
-using Helios.Net;
-using Helios.Net.Bootstrap;
-using Helios.Topology;
+using Core;
+using Hik.Communication.Scs.Client;
+using Hik.Communication.Scs.Communication.EndPoints.Tcp;
 
 namespace Client
 {
     public class Client : IClient
     {
-        public IConnection Connection;
-        public INode RemoteHost;
+	    private IScsClient _client;
+	    public string IpAddress { get; }
+	    public int Port { get; }
+		public ILog Log { get; }
 
-        public Client()
+		public Client(string ipAddress, int port, ILog log)
+	    {
+		    IpAddress = ipAddress;
+		    Port = port;
+		    Log = log;
+	    }
+
+        public void Start()
         {
-        }
+			try
+			{
+				Log.Warn("Connecting to server at {0} : {1} ", Category.System, IpAddress, Port);
+				_client = ScsClientFactory.CreateClient(new ScsTcpEndPoint(IpAddress, Port));
 
-        public void Start(string ipAddress, int port)
+				_client.MessageReceived += OnReceiveMessage;
+				_client.Connected += OnConnected;
+				_client.Disconnected += OnDisconected;
+				_client.Connect();
+
+			}
+			catch (Exception ex)
+			{
+				Log?.Exception(ex, "Starting Client");
+			}
+		}
+
+		private void OnReceiveMessage(object sender, Hik.Communication.Scs.Communication.Messages.MessageEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void OnConnected(object sender, EventArgs e)
+		{
+			// Send first packet
+		}
+
+		private void OnDisconected(object sender, EventArgs e)
+		{
+			Log.Info($"Disconnected client at {_client.ToString()}");
+		}
+
+		public void Stop()
         {
-            try
-            {
-                RemoteHost = NodeBuilder.BuildNode().Host(ipAddress).WithPort(port).WithTransportType(TransportType.Tcp);
-                Connection =
-                    new ClientBootstrap()
-                        .SetTransport(TransportType.Tcp)
-                        .RemoteAddress(RemoteHost)
-                        .OnConnect(OnTCPConnect)
-                        .OnReceive(OnTCPReceive)
-                        .OnDisconnect(OnTCPDisconnect)
-                        .Build().NewConnection(NodeBuilder.BuildNode().Host(IPAddress.Any).WithPort(10001), RemoteHost);
+			_client.Disconnect();
 
-                Connection.Open();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-        }
-
-        private void OnTCPConnect(INode remoteaddress, IConnection server)
-        {
-            Console.WriteLine($"Connected to {remoteaddress.Host}:{remoteaddress.Port}, start receiving data");
-            server.BeginReceive();
-        }
-
-        private void OnTCPReceive(NetworkData data, IConnection server)
-        {
-            Console.WriteLine($"Receive {data.Length} from {server.RemoteHost}");
-        }
-
-        private void OnTCPDisconnect(HeliosConnectionException reason, IConnection server)
-        {
-            Console.WriteLine($"Disconnected from {server.RemoteHost}, reason: {reason}");
-        }
-
-        public void Stop()
-        {
-            throw new NotImplementedException();
-        }
+		}
 
         public void Send(string message)
         {
             throw new NotImplementedException();
         }
-    }
 
-    public interface IClient
-    {
-        void Start(string ipAddress, int port);
-        void Stop();
-
-        void Send(string message);
     }
 }
