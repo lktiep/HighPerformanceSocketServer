@@ -1,6 +1,6 @@
 using Hik.Communication.Scs.Communication.Messages;
 
-namespace Server.Network
+namespace Core.Network
 {
 	public class AuthMessage : ScsMessage
 	{

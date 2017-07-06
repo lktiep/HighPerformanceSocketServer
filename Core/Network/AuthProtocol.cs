@@ -4,7 +4,7 @@ using System.IO;
 using Hik.Communication.Scs.Communication.Messages;
 using Hik.Communication.Scs.Communication.Protocols;
 
-namespace Server.Network
+namespace Core.Network
 {
 	public class AuthProtocol : IScsWireProtocol
 	{
