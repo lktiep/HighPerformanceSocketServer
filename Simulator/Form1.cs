@@ -5,11 +5,13 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Client;
 using Core;
 using NLog;
+using Timer = System.Windows.Forms.Timer;
 
 namespace Simulator
 {
@@ -20,10 +22,32 @@ namespace Simulator
         private static int _port = 6789;
 
         private List<IClient> _clients = new List<IClient>();
+        private SynchronizationContext Context;
+        private Timer updateOnlineNumberTimer;
 
         public Form1()
         {
             InitializeComponent();
+            Context = SynchronizationContext.Current;
+
+            updateOnlineNumberTimer = new Timer { Interval = 1000 };
+            updateOnlineNumberTimer.Tick += UpdateOnlineNumberTimerOnTick;
+            updateOnlineNumberTimer.Start();
+        }
+
+        private void UpdateOnlineNumberTimerOnTick(object sender, EventArgs e)
+        {
+            Context.Post(status =>
+            {
+                try
+                {
+                    lblOnline.Text = _clients.Count.ToString("D4");
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(exception);
+                }
+            }, null);
         }
 
         private void btnStart_Click(object sender, EventArgs e)

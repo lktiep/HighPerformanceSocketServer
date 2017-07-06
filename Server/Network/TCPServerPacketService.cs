@@ -14,6 +14,7 @@ namespace Server.Network
 		{
 
             RecvPackets.Add(0x0001, typeof(R0001Authenticate));
+            RecvPackets.Add(0x0003, typeof(R0003Chat));
 		}
 	}
 }

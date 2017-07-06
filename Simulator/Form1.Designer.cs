@@ -31,7 +31,7 @@
             this.btnStart = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblOnline = new System.Windows.Forms.Label();
             this.btnStop = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -62,16 +62,16 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Number of connections:";
             // 
-            // label2
+            // lblOnline
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Tahoma", 48F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
-            this.label2.Location = new System.Drawing.Point(223, 20);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(197, 77);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "0000";
+            this.lblOnline.AutoSize = true;
+            this.lblOnline.Font = new System.Drawing.Font("Tahoma", 48F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblOnline.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.lblOnline.Location = new System.Drawing.Point(223, 20);
+            this.lblOnline.Name = "lblOnline";
+            this.lblOnline.Size = new System.Drawing.Size(197, 77);
+            this.lblOnline.TabIndex = 2;
+            this.lblOnline.Text = "0000";
             // 
             // btnStop
             // 
@@ -89,7 +89,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(432, 234);
             this.Controls.Add(this.btnStop);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.lblOnline);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.btnStart);
@@ -105,7 +105,7 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblOnline;
         private System.Windows.Forms.Button btnStop;
     }
 }

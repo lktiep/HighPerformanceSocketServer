@@ -13,6 +13,7 @@ namespace Client.Network
         public TCPClientPacketService()
         {
             SendPackets.Add(typeof(S0001Authenticate), 0x0001);
+            SendPackets.Add(typeof(S0003Chat), 0x0003);
         }
     }
 }

@@ -6,12 +6,14 @@ using Core;
 using Core.Network;
 using Hik.Communication.Scs.Client;
 using Hik.Communication.Scs.Communication.EndPoints.Tcp;
+using UltimateTimer;
 
 namespace Client
 {
     public class Client : IClient
     {
-	    private IScsClient _client;
+        private readonly ThreadPoolTimer _chatTimer;
+        private IScsClient _client;
 	    public string IpAddress { get; }
 	    public int Port { get; }
 		public ILog Log { get; }
@@ -26,6 +28,8 @@ namespace Client
 		    Log = log;
 	        UserName = userName;
 	        PacketService = new TCPClientPacketService();
+
+            _chatTimer = ThreadPoolTimer.Create(SendingRandomChat);
         }
 
         public void Start()
@@ -77,9 +81,26 @@ namespace Client
 		{
 			// Send first packet
             Send(new S0001Authenticate(this));
-		}
 
-		private void OnDisconected(object sender, EventArgs e)
+            // After 3 seconds, sending random chat
+		    ThreadExtension.DelayAndExecute(StartSendingRandomChat, 3000);
+        }
+
+        #region Testing
+
+        private void StartSendingRandomChat()
+        {
+            _chatTimer.SetTimer(DateTime.Now, 3000, 0);
+        }
+
+        private void SendingRandomChat()
+        {
+            Send(new S0003Chat(this));
+        }
+
+        #endregion
+
+        private void OnDisconected(object sender, EventArgs e)
 		{
 			Log.Info($"Disconnected client at {_client}");
 		}
