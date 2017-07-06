@@ -11,6 +11,8 @@ namespace Server
 {
     public class InternalClient : IInternalClient
     {
+	    private const int WaitTime = 5000;
+
 	    private readonly IScsServerClient _client;
 	    private readonly IServer _server;
 	    public PacketService PacketService { get; }
@@ -36,9 +38,20 @@ namespace Server
 			_client.WireProtocol = new AuthProtocol();
 			_client.Disconnected += OnTCPDisconnected;
 			_client.MessageReceived += OnReceiveMessage;
+
+			ThreadExtension.DelayAndExecute(WaitForFirstPacket, WaitTime);
 		}
 
-		private void OnReceiveMessage(object sender, Hik.Communication.Scs.Communication.Messages.MessageEventArgs e)
+	    private void WaitForFirstPacket()
+	    {
+		    if (string.IsNullOrEmpty(UserName))
+		    {
+			    Log.Error($"Wait for {WaitTime} but not receive Authenticate Packet, drop this connection: {Guid}-{IP}");
+				Disconnect("Don't receive first packet");
+		    }
+	    }
+
+	    private void OnReceiveMessage(object sender, Hik.Communication.Scs.Communication.Messages.MessageEventArgs e)
 		{
 			var message = (AuthMessage)e.Message;
 			Buffer = message.Data;
