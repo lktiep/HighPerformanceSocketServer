@@ -14,7 +14,10 @@ namespace Server
         static async Task RunClientAsync()
         {
 
-                Console.ReadLine();
+            var server = new Server(log, _host, _port);
+            server.Start();
+
+            Console.ReadLine();
 
         }
 

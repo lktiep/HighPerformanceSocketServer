@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Core;
 using Core.Network;
 using Hik.Communication.Scs.Communication.EndPoints.Tcp;
@@ -30,7 +31,7 @@ namespace Server
             Host = ipAddress;
 
             _clients = new Dictionary<Guid, IInternalClient>();
-			PacketService = new TCPPacketService();
+			PacketService = new TCPServerPacketService();
 			BanIps = new List<string>();
 			BanUsers = new List<string>();
 
@@ -66,14 +67,15 @@ namespace Server
 				return;
 			}
 
-			var client = new InternalClient(_logger, e.Client, ip, PacketService, this);
+            var guid = Guid.NewGuid();
+			var client = new InternalClient(guid, _logger, e.Client, ip, PacketService, this);
 			client.OnDisconnect += Client_OnDisconnect;
 
 			_clients.Add(client.Guid, client);
-			_logger.Info($"Accept client from {ip}:{client.Guid}");
+			_logger.Info($"Accept client from {ip}:{guid}");
 		}
 
-		private void Client_OnDisconnect(Guid clientGuid)
+        private void Client_OnDisconnect(Guid clientGuid)
 		{
 			if (_clients.ContainsKey(clientGuid))
 			{
@@ -88,14 +90,17 @@ namespace Server
 
 		private bool VerifyBanIPs()
 	    {
-		    return true;
+		    return false;
 	    }
 
 	    public void Start()
-        {
-			_server.Start();
-			_logger.Info("Start listening clients...");
-        }
+	    {
+	        Task.Factory.StartNew(() =>
+	        {
+	            _server.Start();
+	            _logger.Info("Start listening clients...");
+	        });
+	    }
                 
         public void Stop()
         {

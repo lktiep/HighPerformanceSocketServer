@@ -1,4 +1,6 @@
-﻿using Core;
+﻿using Client.Network.Send;
+using Core;
+using Core.Network;
 
 namespace Client
 {
@@ -7,10 +9,13 @@ namespace Client
 		ILog Log { get; }
 		string IpAddress { get; }
 		int Port { get; }
+	    byte[] Buffer { get; }
+	    PacketService PacketService { get; }
+	    string UserName { get; }
 
-		void Start();
+        void Start();
 		void Stop();
 
-		void Send(string message);
+		void Send(ClientSendPacket packet);
 	}
 }

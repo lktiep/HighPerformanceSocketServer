@@ -11,7 +11,7 @@ namespace Server
 {
     public class InternalClient : IInternalClient
     {
-	    private const int WaitTime = 5000;
+	    private const int WaitTime = 15000;
 
 	    private readonly IScsServerClient _client;
 	    private readonly IServer _server;
@@ -25,9 +25,9 @@ namespace Server
 
 		public event ClientDisconnectedCallBack OnDisconnect;
 
-		public InternalClient(ILog log, IScsServerClient client, string ip, PacketService packetService, IServer server)
+		public InternalClient(Guid guid, ILog log, IScsServerClient client, string ip, PacketService packetService, IServer server)
 		{
-			Guid = new Guid();
+			Guid = guid;
 
 			Log = log;
 			_client = client;
@@ -36,6 +36,7 @@ namespace Server
 			PacketService = packetService;
 
 			_client.WireProtocol = new AuthProtocol();
+
 			_client.Disconnected += OnTCPDisconnected;
 			_client.MessageReceived += OnReceiveMessage;
 
@@ -59,7 +60,7 @@ namespace Server
 			if (PacketService.HasRecvPacket(message.OpCode))
 			{
 				var packetType = PacketService.GetRecvPacketType(message.OpCode);
-				var packetHandler = (ReceivePacket)Activator.CreateInstance(packetType);
+				var packetHandler = (ServerReceivePacket)Activator.CreateInstance(packetType);
 
 				try
 				{

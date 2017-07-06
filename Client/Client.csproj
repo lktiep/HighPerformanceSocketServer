@@ -35,6 +35,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.4.11\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="Scs">
       <HintPath>..\packages\Scs.1.1.1\lib\net40-client\Scs.dll</HintPath>
     </Reference>
@@ -47,6 +50,10 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="IClient.cs" />
+    <Compile Include="Network\Receive\ClientReceivePacket.cs" />
+    <Compile Include="Network\Send\ClientSendPacket.cs" />
+    <Compile Include="Network\Send\S0001Authenticate.cs" />
+    <Compile Include="Network\TCPClientPacketService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -63,5 +70,6 @@
       <Name>Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -62,8 +62,8 @@
     <Compile Include="InternalClient.cs" />
     <Compile Include="IServer.cs" />
     <Compile Include="Network\Receive\R0001Authenticate.cs" />
-    <Compile Include="Network\Receive\ReceivePacket.cs" />
-    <Compile Include="Network\TCPPacketService.cs" />
+    <Compile Include="Network\Receive\ServerReceivePacket.cs" />
+    <Compile Include="Network\TCPServerPacketService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />

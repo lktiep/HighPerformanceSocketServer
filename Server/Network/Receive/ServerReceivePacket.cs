@@ -8,7 +8,7 @@ using Core.Network;
 
 namespace Server.Network.Receive
 {
-	public abstract class ReceivePacket
+	public abstract class ServerReceivePacket
 	{
 		public ILog Log { get; set; }
 		protected ByteBuffer Buffer;

@@ -2,7 +2,7 @@
 
 namespace Server.Network.Receive
 {
-	public class R0001Authenticate : ReceivePacket
+	public class R0001Authenticate : ServerReceivePacket
 	{
 		public override void Read()
 		{
