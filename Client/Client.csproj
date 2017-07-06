@@ -43,6 +43,7 @@
       <HintPath>..\packages\Scs.1.1.1\lib\net40-client\Scs.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Threading, Version=1.0.2856.102, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\TaskParallelLibrary.1.0.2856.0\lib\Net35\System.Threading.dll</HintPath>
@@ -55,9 +56,11 @@
     <Compile Include="Client.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="Network\Receive\ClientReceivePacket.cs" />
+    <Compile Include="Network\Receive\R0006TimeResponse.cs" />
     <Compile Include="Network\Send\ClientSendPacket.cs" />
     <Compile Include="Network\Send\S0001Authenticate.cs" />
     <Compile Include="Network\Send\S0003Chat.cs" />
+    <Compile Include="Network\Send\S0005TimeRequest.cs" />
     <Compile Include="Network\TCPClientPacketService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

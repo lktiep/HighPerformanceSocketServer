@@ -44,6 +44,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http" />
@@ -62,8 +63,11 @@
     <Compile Include="InternalClient.cs" />
     <Compile Include="IServer.cs" />
     <Compile Include="Network\Receive\R0001Authenticate.cs" />
+    <Compile Include="Network\Receive\R0005TimeRequest.cs" />
     <Compile Include="Network\Receive\R0003Chat.cs" />
     <Compile Include="Network\Receive\ServerReceivePacket.cs" />
+    <Compile Include="Network\Send\S0006TimeResponse.cs" />
+    <Compile Include="Network\Send\ServerSendPacket.cs" />
     <Compile Include="Network\TCPServerPacketService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -82,8 +86,6 @@
   <ItemGroup>
     <Content Include="Changes.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Network\Send\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

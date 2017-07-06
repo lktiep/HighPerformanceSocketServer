@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using Core;
 using NLog;
@@ -14,7 +15,7 @@ namespace Server
         static async Task RunClientAsync()
         {
 
-            var server = new Server(log, _host, _port);
+            var server = new Server(log, ConfigurationManager.AppSettings["host"], int.Parse(ConfigurationManager.AppSettings["port"]));
             server.Start();
 
             Console.ReadLine();

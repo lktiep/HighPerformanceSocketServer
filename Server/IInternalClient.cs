@@ -1,6 +1,7 @@
 ﻿using System;
 using Core;
 using Core.Network;
+using Server.Network.Send;
 
 namespace Server
 {
@@ -23,5 +24,6 @@ namespace Server
 		event ClientDisconnectedCallBack OnDisconnect;
 	    void Disconnect(string reason);
 	    bool VerifyUsername(string username);
+        void Send(ServerSendPacket packet);
     }
 }

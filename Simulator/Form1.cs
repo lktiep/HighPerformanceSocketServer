@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -33,6 +34,9 @@ namespace Simulator
             updateOnlineNumberTimer = new Timer { Interval = 1000 };
             updateOnlineNumberTimer.Tick += UpdateOnlineNumberTimerOnTick;
             updateOnlineNumberTimer.Start();
+
+            _host = ConfigurationManager.AppSettings["host"];
+            _port = int.Parse(ConfigurationManager.AppSettings["port"]);
         }
 
         private void UpdateOnlineNumberTimerOnTick(object sender, EventArgs e)

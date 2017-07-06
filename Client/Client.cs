@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Client.Network;
 using Client.Network.Receive;
 using Client.Network.Send;
@@ -90,7 +91,20 @@ namespace Client
 
         private void StartSendingRandomChat()
         {
-            _chatTimer.SetTimer(DateTime.Now, 3000, 0);
+            var thrThreadSendTrackTime = new Thread(SendTimeTest);
+            thrThreadSendTrackTime.Start();
+            //_chatTimer.SetTimer(DateTime.Now, 3000, 0);
+        }
+        
+        Random random = new Random();
+        private void SendTimeTest()
+        {
+            while (true)
+            {
+                Send(new S0005TimeRequest(this));
+
+                Thread.Sleep(random.Next(2000, 5000));
+            }
         }
 
         private void SendingRandomChat()

@@ -6,6 +6,7 @@ using Core.Network;
 using Hik.Communication.Scs.Server;
 using Server.Network;
 using Server.Network.Receive;
+using Server.Network.Send;
 
 namespace Server
 {
@@ -114,5 +115,26 @@ namespace Server
 		    return true;
 	    }
 
+        public void Send(ServerSendPacket packet)
+        {
+            try
+            {
+                var message = packet.GetMessage();
+
+                if (message != null)
+                {
+                    _client.SendMessage(message);
+                    Log.Debug($"Client sends {message.OpCode:X4}-{packet.GetType().Name}");
+                }
+                else
+                {
+                    Log.Warn("Just send NULL packet from");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e);
+            }
+        }
     }
 }
