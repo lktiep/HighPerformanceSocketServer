@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using Core.Network;
 
 namespace Server
 {
     public interface IServer
     {
-        IPAddress Host { get; }
+		string Host { get; }
         int Port { get; }
 
         void Start();
@@ -15,5 +16,10 @@ namespace Server
         void BlockConnectionByUsername(string username);
         void UnblockConnectionByUsername(string username);
         void SendAll(string message);
+
+		List<string> BanIps { get; }
+		List<string> BanUsers { get; }
+
+		PacketService PacketService { get; }
     }
 }

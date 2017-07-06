@@ -1,87 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading;
+using System.Text.RegularExpressions;
 using Core;
+using Core.Network;
+using Hik.Communication.Scs.Communication.EndPoints.Tcp;
+using Hik.Communication.Scs.Server;
+using Server.Network;
 
 namespace Server
 {
     public class Server : IServer
     {
         private readonly ILog _logger;
-        //IReactor _server;
+	    private readonly IScsServer _server;
 
-        public IPAddress Host { get; }
+		public string Host { get; }
         public int Port { get; }
 
         private Dictionary<Guid, IInternalClient> _clients;
 
-        public Server(ILog logger, IPAddress ipAddress, int port)
+		public List<string> BanIps { get; }
+		public List<string> BanUsers { get; }
+		public PacketService PacketService { get; }
+
+		public Server(ILog logger, string ipAddress, int port)
         {
             _logger = logger;
             Port = port;
             Host = ipAddress;
 
             _clients = new Dictionary<Guid, IInternalClient>();
+			PacketService = new TCPPacketService();
+			BanIps = new List<string>();
+			BanUsers = new List<string>();
 
+	        BuildBanList();
 
-        }
+			try
+			{
+				_logger.Info("Start ManageServer at {0}:{1}...", Category.System, Host, Port);
+				_server = ScsServerFactory.CreateServer(new ScsTcpEndPoint(Host, Port));
 
-        public void Start()
+				_server.ClientConnected += OnConnected;
+			}
+			catch (Exception ex)
+			{
+				_logger?.Exception(ex, "Start ManagementServer");
+			}
+		}
+
+	    private void BuildBanList()
+	    {
+		    // Add blocked IP or block username here
+	    }
+
+	    private void OnConnected(object sender, ServerClientEventArgs e)
+	    {
+			string ip = Regex.Match(e.Client.RemoteEndPoint.ToString(), "([0-9]+).([0-9]+).([0-9]+).([0-9]+)").Value;
+			_logger.Info($"Channel {ip} connected!");
+
+			if (VerifyBanIPs())
+		    {
+				_logger.Error($"This {ip} is blocked!");
+				e.Client.Disconnect();
+				return;
+			}
+
+			var client = new InternalClient(_logger, e.Client, ip, PacketService, this);
+			client.OnDisconnect += Client_OnDisconnect;
+
+			_clients.Add(client.Guid, client);
+			_logger.Info($"Accept client from {ip}:{client.Guid}");
+		}
+
+		private void Client_OnDisconnect(Guid clientGuid)
+		{
+			if (_clients.ContainsKey(clientGuid))
+			{
+				_logger.Info($"Removed client {clientGuid} because it's disconnected");
+				_clients.Remove(clientGuid);
+			}
+			else
+			{
+				_logger.Info($"Couldn't find client {clientGuid} to remove");
+			}
+		}
+
+		private bool VerifyBanIPs()
+	    {
+		    return true;
+	    }
+
+	    public void Start()
         {
-            //var executor = new TryCatchExecutor(exception => Console.WriteLine("Unhandled exception: {0}", exception));
-
-            //var bootstrapper = new ServerBootstrap()
-            //    .Group(ServerGroup, WorkerGroup)
-            //    .Channel<TcpServerSocketChannel>()
-            //    .ChildOption(ChannelOption.TcpNodelay, true)
-            //    .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>(channel =>
-            //    {
-            //        channel.Pipeline.AddLast(GetEncoder())
-            //            .AddLast(GetDecoder())
-            //            .AddLast(new IntCodec(true))
-            //            .AddLast(new CounterHandlerInbound(_inboundThroughputCounter))
-            //            .AddLast(new CounterHandlerOutbound(_outboundThroughputCounter))
-            //            .AddLast(new ErrorCounterHandler(_errorCounter));
-            //    }));
-
-            //_server = bootstrapper.NewReactor(NodeBuilder.BuildNode().Host(Host).WithPort(Port));
-            //_server.OnConnection += OnTcpConnection;
-
-            //_server.Start();
-
-            Console.WriteLine("Running...");
+			_server.Start();
+			_logger.Info("Start listening clients...");
         }
                 
-        //private void OnTcpConnection(INode address, IConnection connection)
-        //{
-        //    Console.WriteLine("Connected: {0}", address);
-
-        //    var guid = Guid.NewGuid();
-        //    IInternalClient internalClient = new InternalClient(guid, _logger, address, connection);
-        //    internalClient.OnDisconnect += OnClientDisconnected;
-
-        //    _clients.Add(guid, internalClient);
-        //}
-
-        private void OnClientDisconnected(Guid clientGuid)
-        {
-            if (_clients.ContainsKey(clientGuid))
-            {
-                _clients.Remove(clientGuid);
-            }
-        }
-
         public void Stop()
         {
-            //_shutdownToken.Cancel();
+	        try
+	        {
+				_logger.Info("Shutting down server...");
+		        foreach (var client in _clients)
+		        {
+			        client.Value.Disconnect("Server is off");
+		        }
 
-            _clients.Clear();
-
-            Console.WriteLine("Shutting down...");
-            //_server.Stop();
-            Console.WriteLine("Terminated");
+		        _server.Stop();
+		        _clients.Clear();
+	        }
+	        finally
+	        {
+		        _logger.Info("Server is terminated!");
+	        }
         }
 
         public IEnumerable<IInternalClient> GetConnections()
@@ -91,17 +123,26 @@ namespace Server
 
         public void BlockConnectionByUsername(string username)
         {
-            throw new NotImplementedException();
-        }
+			if (BanUsers.Contains(username))
+			{
+				BanUsers.Add(username.ToLower());
+				_logger.Info($"Blocked connection by username:{username}");
+			}
+		}
 
         public void UnblockConnectionByUsername(string username)
         {
-            throw new NotImplementedException();
+	        if (BanUsers.Contains(username))
+	        {
+		        BanUsers.RemoveAll(u => u.ToLower() == username.ToLower());
+				_logger.Info($"Unblocked connection from username:{username}");
+	        }
         }
 
         public void SendAll(string message)
         {
             throw new NotImplementedException();
         }
+
     }
 }

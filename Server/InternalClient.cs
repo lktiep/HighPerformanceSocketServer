@@ -1,79 +1,104 @@
 ﻿using System;
+using System.Reflection.Emit;
 using System.Text;
 using Core;
+using Core.Network;
+using Hik.Communication.Scs.Server;
+using Server.Network;
+using Server.Network.Receive;
 
 namespace Server
 {
     public class InternalClient : IInternalClient
     {
-        private readonly Guid _guid;
-        private readonly ILog _logger;
+	    private readonly IScsServerClient _client;
+	    private readonly IServer _server;
+	    public PacketService PacketService { get; }
 
+		public ILog Log { get; }
+		public Guid Guid { get; }
+		public byte[] Buffer { get; set; }
+		public string UserName { get; set; }
+		public string IP { get; }
 
-        public event ClientDisconnectedCallBack OnDisconnect;
+		public event ClientDisconnectedCallBack OnDisconnect;
 
-        //public InternalClient(Guid guid, ILog logger, INode address, IConnection tcpConnection)
-        //{
-        //    _guid = guid;
-        //    _logger = logger;
-        //    _address = address;
-        //    _tcpConnection = tcpConnection;
+		public InternalClient(ILog log, IScsServerClient client, string ip, PacketService packetService, IServer server)
+		{
+			Guid = new Guid();
 
-        //    _tcpConnection.OnDisconnection += OnTcpDisconnect;
-        //    _tcpConnection.BeginReceive(ReceiveTCP);
-        //}
+			Log = log;
+			_client = client;
+			IP = ip;
+			_server = server;
+			PacketService = packetService;
 
-        ///// <summary>
-        ///// Khi client bị disconnect vì bất cứ lí do gì thì đây là event để handle
-        ///// </summary>
-        ///// <param name="reason"></param>
-        ///// <param name="address"></param>
-        //private void OnTcpDisconnect(Helios.Exceptions.HeliosConnectionException reason, IConnection address)
-        //{
-        //    Console.WriteLine("Disconnected: {0}; Reason: {1}", address.RemoteHost, reason.Type);
-        //    _logger.Info($"Disconnected: {address.RemoteHost}; Reason: {reason.Type}");
-            
-        //    // Cleanup other connection here, then notify Disconnect to Server
+			_client.WireProtocol = new AuthProtocol();
+			_client.Disconnected += OnTCPDisconnected;
+			_client.MessageReceived += OnReceiveMessage;
+		}
 
-        //    NotifyDisconnect();
-        //}
+		private void OnReceiveMessage(object sender, Hik.Communication.Scs.Communication.Messages.MessageEventArgs e)
+		{
+			var message = (AuthMessage)e.Message;
+			Buffer = message.Data;
 
-        ///// <summary>
-        ///// Nhận dữ liệu qua TCP
-        ///// </summary>
-        ///// <param name="data"></param>
-        ///// <param name="channel"></param>
-        //public static void ReceiveTCP(NetworkData data, IConnection channel)
-        //{
-        //    var command = Encoding.UTF8.GetString(data.Buffer);
+			if (PacketService.HasRecvPacket(message.OpCode))
+			{
+				var packetType = PacketService.GetRecvPacketType(message.OpCode);
+				var packetHandler = (ReceivePacket)Activator.CreateInstance(packetType);
 
-        //    //Console.WriteLine("Received: {0}", command);
-        //    if (command.ToLowerInvariant() == "gettime")
-        //    {
-        //        var time = Encoding.UTF8.GetBytes(DateTime.Now.ToLongTimeString());
-        //        channel.Send(new NetworkData { Buffer = time, Length = time.Length, RemoteHost = channel.RemoteHost });
-        //        //Console.WriteLine("Sent time to {0}", channel.Node);
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine("Invalid command: {0}", command);
-        //        var invalid = Encoding.UTF8.GetBytes("Unrecognized command");
+				try
+				{
+					packetHandler.Process(this);
+				}
+				catch
+				{
+					Log.Error($"Error when handle packet {message.OpCode:X4}:{IP}");
+				}
+			}
+			else
+			{
+				Log.Error($"No Handler for OPC: {message.OpCode:X4}, Length={Buffer.Length}");
+			}
+		}
 
-        //        channel.Send(new NetworkData
-        //        {
-        //            Buffer = invalid,
-        //            Length = invalid.Length,
-        //            RemoteHost = channel.RemoteHost
-        //        });
-        //    }
-        //}
+		///// <summary>
+		///// Khi client bị disconnect vì bất cứ lí do gì thì đây là event để handle
+		///// </summary>
+		private void OnTCPDisconnected(object sender, EventArgs e)
+		{
+			Log.Info($"Disconnected: {IP}");
 
-        /// <summary>
-        /// Thông báo cho server biết Client này bị disconnect
-        /// </summary>
-        private void NotifyDisconnect()
+			// Cleanup other connection here, then notify Disconnect to Server
+
+			NotifyDisconnect();
+		}
+
+		/// <summary>
+		/// Thông báo cho server biết Client này bị disconnect
+		/// </summary>
+		private void NotifyDisconnect()
         {
-            OnDisconnect?.Invoke(_guid);
+            OnDisconnect?.Invoke(Guid);
         }
+
+	    public void Disconnect(string reason)
+	    {
+		    Log.Info($"Force disconnect client {Guid} at {IP} because {reason}");
+			_client.Disconnect();
+	    }
+
+	    public bool VerifyUsername(string username)
+	    {
+		    if (_server.BanUsers.Contains(username.ToLower()))
+		    {
+			    return false;
+		    }
+
+		    UserName = username;
+		    return true;
+	    }
+
     }
 }
